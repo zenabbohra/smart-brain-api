@@ -1,9 +1,23 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
+const cors = require('cors');
+const knex = require('knex');
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors());
+
+const db = knex({
+  client: 'pg',
+  version: '7.2',
+  connection: {
+    host : '127.0.0.1',
+    user : 'zenab',
+    password : '',
+    database : 'smart-brain'
+  }
+});
 
 const database =
 	{ users :
@@ -53,7 +67,7 @@ app.post('/signin', (req, res) => {
   // }
 	if(req.body.email === database.users[0].email &&
 		req.body.password === database.users[0].password){
-		res.json('success')
+		res.json(database.users[0])
 	} else{
 		res.status(400).json('error signing in');
 	}
@@ -61,36 +75,55 @@ app.post('/signin', (req, res) => {
 
 app.post('/register', (req, res) => {
   const { name, email, password } = req.body;
-  database.users.push({
-    id: '126',
-    name: name,
-    email: email,
-    password: password,
-    entries: 0,
-    joined: new Date()
-  });
+  db('users')
+    .returning('*')
+    .insert({name: name, email: email, joined: new Date()})
+    .then(user => {
+      res.json(user[0])
+    })
+    .catch(err => res.status(400).json('unable to register'));
+  // db('login').insert({email: email, hash:bcrypt.hashSync(password, 10) });
 
-  database.login.push({
-    id: '126',
-    hash: bcrypt.hashSync(password, 10),
-    email: email
-  });
-
-  console.log(database.login[database.login.length - 1]);
-  res.json(database.users[database.users.length -1]);
+  // database.users.push({
+  //   id: '126',
+  //   name: name,
+  //   email: email,
+  //   password: password,
+  //   entries: 0,
+  //   joined: new Date()
+  // });
+  //
+  // database.login.push({
+  //   id: '126',
+  //   hash: bcrypt.hashSync(password, 10),
+  //   email: email
+  // });
+  // res.json(database.users[database.users.length -1]);
 });
 
 app.get('/profile/:id', (req, res) => {
-  let found = false;
-  database.users.forEach(user => {
-    if(req.params.id === user.id){
-      found = true;
-      return res.json(user);
-    }
-  });
-  if(!found){
-    res.status(400).json('no such user');
-  }
+  db('users').where({
+    id: req.params.id
+  }).select('*')
+    .then(user => {
+      if(user[0].id){
+        res.json(user[0])
+      }else {
+        res.json('unable to find user')
+      }
+    })
+    .catch(err => res.status(400).json('no such user'));
+
+  // let found = false;
+  // database.users.forEach(user => {
+  //   if(req.params.id === user.id){
+  //     found = true;
+  //     return res.json(user);
+  //   }
+  // });
+  // if(!found){
+  //   res.status(400).json('no such user');
+  // }
 });
 
 app.put('/image', (req, res) => {
@@ -111,7 +144,3 @@ app.put('/image', (req, res) => {
 app.listen(3000, ()=>{
 	console.log('app is listening to port 3000');
 });
-
-// app.post('/profile:id', (req, res) => {
-//
-// });
