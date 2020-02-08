@@ -17,13 +17,13 @@ const handleSignin = (req, res, db, bcrypt) => {
               res.json(user[0]);
             })
         } else {
-          res.json('incorrect password');
+          res.json('Incorrect password');
         }
       } else {
-        res.json('incorrect username');
+        res.json('Incorrect username');
       }
     })
-    .catch(err => res.status(400).json('no such username'));
+    .catch(err => res.status(400).json('No such username'));
 };
 
 module.exports = {

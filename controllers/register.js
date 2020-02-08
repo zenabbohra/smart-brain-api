@@ -3,6 +3,16 @@ const handleRegister = (req, res, db, bcrypt) => {
   const { name, email, password } = req.body;
   const hash = bcrypt.hashSync(password, 10);
 
+  if (typeof name !== 'string' || name.length >= 100) {
+    return res.status(400).json({err: 'name should be a string'});
+  }
+  if (typeof email !== 'string' || email.length >= 100 || email.length < 5) {
+    return res.status(400).json({err: 'email should be a string'});
+  }
+  if (typeof password !== 'string' || password.length > 30 || password.length < 3) {
+    return res.status(400).json({err: 'password should be a string & password length should be greater than 3'});
+  }
+
   db.transaction(trx => {
     trx.insert({
       email: email,
@@ -25,7 +35,7 @@ const handleRegister = (req, res, db, bcrypt) => {
               res.json('user could not be registered');
             }
           })
-          .catch(err => res.status(400).json('unable to register'));
+          .catch(() => res.status(400).json({'err' : 'unable to register'}));
       })
       .then(trx.commit)
       .catch(trx.rollback);
