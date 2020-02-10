@@ -16,7 +16,7 @@ const db = knex({
   client: 'pg',
   connection: {
     connectionString: process.env.DATABASE_URL || 'postgresql://zenab@127.0.0.1/smart-brain',
-    ssl: true
+    ssl: !!process.env.DATABASE_URL
   }
 });
 

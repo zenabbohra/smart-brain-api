@@ -50,8 +50,12 @@ const handleRegister = (req, res, db, bcrypt) => {
           .catch(() => res.status(400).json({'err' : 'unable to register'}));
       })
       .then(trx.commit)
-      .catch(trx.rollback);
+      .catch((err) => trx.rollback(err));
   })
+    .catch((error) => {
+      console.log('err in the last catch', error);
+      return res.status(400).json({'err': 'Username or password already exists'});
+    });
 };
 module.exports = {
   handleRegister: handleRegister
